@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">WebViewCustomFontActivity</string>
+    <string name="font_display_block">font-display: block</string>
+    <string name="font_display_optional">font-display: optional</string>
+    <string name="go_back">Go back</string>
 </resources>
