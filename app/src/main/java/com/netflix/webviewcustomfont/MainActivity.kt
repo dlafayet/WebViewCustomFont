@@ -22,7 +22,6 @@ class MainActivity : AppCompatActivity() {
         val nextButton = findViewById<Button>(R.id.buttonNext)
         webView = findViewById(R.id.webview)
         nextButton.setOnClickListener {
-            --count;
             webView.loadDataWithBaseURL("file:///android_asset/",
                     getHtmlString(--count),
                     "text/html",
