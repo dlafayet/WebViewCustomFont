@@ -1,6 +1,11 @@
 package com.netflix.webviewcustomfont
 
+import android.app.ActivityManager
+import android.content.Context
+import android.graphics.fonts.SystemFonts
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.webkit.WebView
 import android.widget.Button
 import android.widget.TextView
@@ -9,24 +14,43 @@ import java.io.FileNotFoundException
 import java.io.InputStream
 import java.util.*
 
+
 class MainActivity : AppCompatActivity() {
-    private var count = 0
+    private var count = 37
     private lateinit var webView: WebView
     private lateinit var optionButton: TextView
     private lateinit var timer: Timer
+    private val TAG = "Netflix"
+
+    external fun stringFromJNI(): String
+    external fun hasFontSupportForText(text: String): Boolean
+
+    companion object {
+        init {
+            System.loadLibrary("native-lib")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val nextButton = findViewById<Button>(R.id.buttonNext)
+        val textView = findViewById<TextView>(R.id.textView)
+        textView.text = stringFromJNI()
+        val supported = hasFontSupportForText("\u201C\u201D")
+
+        val previousButton = findViewById<Button>(R.id.buttonPrevious)
         webView = findViewById(R.id.webview)
-        nextButton.setOnClickListener {
+        previousButton.setOnClickListener {
             webView.loadDataWithBaseURL("file:///android_asset/",
                     getHtmlString(--count),
                     "text/html",
                     "utf-8",
                     null)
+            getMemoryInfo()
+            val hasJapaneseFont = hasJapaneseFonts()
+            Log.d(TAG, "Has Japanese fonts $hasJapaneseFont")
+
         }
 
         optionButton = findViewById(R.id.buttonOption)
@@ -37,8 +61,43 @@ class MainActivity : AppCompatActivity() {
                 optionButton.text = getString(R.string.font_display_optional)
             }
         }
-
         timer = Timer()
+
+    }
+
+    fun hasJapaneseFonts(): Boolean {
+        var hasJaFont = false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val fontSet = SystemFonts.getAvailableFonts()
+            Log.d("Netflix", "Found ${fontSet.size} fonts")
+            for (font in fontSet) {
+                font.file?.let {
+                    Log.d("Netflix", "Path: ${it.absolutePath}")
+                }
+                val languageTags = font.localeList.toLanguageTags()
+                Log.d("Netflix", "Locale list: $languageTags")
+                val tags = languageTags.split(",").toTypedArray()
+                if (tags.isNotEmpty()) {
+                    for (tag in tags) {
+                        if (tag == "ja") {
+                            hasJaFont = true
+                        }
+                    }
+                }
+            }
+        }
+        return hasJaFont
+    }
+
+    fun getMemoryInfo() {
+        val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val memClass = am.memoryClass
+        val largeMem = am.largeMemoryClass
+        val memInfo = ActivityManager.MemoryInfo()
+        am.getMemoryInfo(memInfo)
+        Log.d(TAG, "memory class: $memClass")
+        Log.d(TAG, "large memory class: $largeMem")
+        Log.d(TAG, "memory info: $memInfo")
     }
 
     override fun onStart() {
