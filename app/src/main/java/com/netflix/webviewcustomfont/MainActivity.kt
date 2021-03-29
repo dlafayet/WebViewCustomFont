@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
     private val TAG = "Netflix"
 
     external fun stringFromJNI(): String
-    external fun hasFontSupportForText(text: String): Boolean
+    external fun hasFontSupportForText(): Boolean
 
     companion object {
         init {
@@ -37,8 +37,6 @@ class MainActivity : AppCompatActivity() {
 
         val textView = findViewById<TextView>(R.id.textView)
         textView.text = stringFromJNI()
-        val supported = hasFontSupportForText("\u201C\u201D")
-
         val previousButton = findViewById<Button>(R.id.buttonPrevious)
         webView = findViewById(R.id.webview)
         previousButton.setOnClickListener {
@@ -51,6 +49,8 @@ class MainActivity : AppCompatActivity() {
             val hasJapaneseFont = hasJapaneseFonts()
             Log.d(TAG, "Has Japanese fonts $hasJapaneseFont")
 
+            val supported = hasFontSupportForText()
+            Log.d(TAG, "hasFontSupportForText $supported")
         }
 
         optionButton = findViewById(R.id.buttonOption)
